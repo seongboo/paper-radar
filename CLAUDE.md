@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current status: planning only — no code exists yet
 
-As of the latest commit, this repository contains **only `README.md`**. There is no source code, no build system, no tests, no dependency manifest, and no CI. The project is at the concept/planning stage (기획 단계).
+As of the latest commit, this repository contains **only documentation** (`README.md`, `DESIGN.md`, this file). There is no source code, no build system, no tests, no dependency manifest, and no CI. The project is at the design stage (설계 단계).
 
 Practical consequences for working here:
 - **Do not assume any code, module layout, or tooling exists.** There are no build/lint/test commands to run because there is nothing to build yet. Don't invent references to files that aren't present.
-- The first substantive coding task will be **greenfield**: establish the project skeleton (language runtime, dependency manifest, entrypoint) before or alongside the first feature.
-- `README.md` is the single source of truth for intent. It is written in **Korean**; keep new user-facing docs consistent with the existing language and terminology unless asked otherwise.
+- The first substantive coding task will be **greenfield**: establish the project skeleton (language runtime, dependency manifest, entrypoint) before or alongside the first feature. **`DESIGN.md` specifies the intended skeleton, module layout, config schema, and milestones (M0–M4) — follow it** unless the user redirects.
+- `README.md` states the intent; `DESIGN.md` holds the concrete design plan. Both are written in **Korean**; keep new user-facing docs consistent with the existing language and terminology unless asked otherwise.
 
 ## What this project is
 
