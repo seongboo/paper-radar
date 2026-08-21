@@ -16,7 +16,14 @@ cp profile.example.yaml profile.yaml   # 카테고리·키워드·관심사 서�
 export ANTHROPIC_API_KEY=...           # 또는 profile 에서 llm.provider: ollama
 uv run paper-radar run                 # 수집→분석→다이제스트 (digests/YYYY-MM-DD.md)
 ```
-`collect`(수집만), `digest --date`(재생성) 하위 명령도 있다. 매일 10:30 KST cron 권장 (arXiv 발표: 한국시간 화~토 오전).
+`collect`(수집만), `digest --date`(재생성) 하위 명령도 있다.
+
+**매일 자동 실행 (cron):** arXiv 발표(한국시간 화~토 오전 9~10시) 직후인 10:30 KST 권장.
+```cron
+30 10 * * * cd $HOME/paper-radar && ANTHROPIC_API_KEY=... uv run paper-radar run >> radar.log 2>&1
+```
+
+**메일 발송:** profile의 `digest.email` 블록을 설정하고 `SMTP_PASSWORD` 환경변수를 주면 다이제스트가 메일로도 온다 (Gmail은 앱 비밀번호 사용). Obsidian 저장은 `digest.obsidian_path` 설정.
 
 ## 핵심 기능 (MVP → 확장)
 - arXiv API 폴링(카테고리/키워드/저자) → 신규 항목 수집
@@ -27,9 +34,10 @@ uv run paper-radar run                 # 수집→분석→다이제스트 (dige
 - Python 3.11+ · uv · SQLite · arXiv API(`arxiv`) · LLM: Claude API(`anthropic`, 기본) / Ollama(로컬)
 
 ## 다음 단계
-- [x] 관심 키워드·카테고리 프로파일 정의 — 스키마·예시 완료(`profile.example.yaml`), 본인 값 채우기만 남음
+- [x] 관심 키워드·카테고리 프로파일 정의 (`profile.example.yaml` — 위상 초전도체·마요라나)
 - [ ] 수집→요약→랭킹 1일치 다이제스트 생성 (실환경 첫 실행)
-- [ ] M4 확장: cron/GitHub Actions 스케줄링, Obsidian 자동 저장, 메일 발송 ([DESIGN.md](DESIGN.md) 참고)
+- [x] M4 일부: Obsidian 자동 저장, 메일 발송, cron 가이드
+- [ ] M4 나머지: cron 실제 등록, Batches 전환(비용 50%↓), 저널 소스 ([DESIGN.md](DESIGN.md) 참고)
 
 ## 관련
 - 24 seongboo2, 16 AARLA, 34 inbox-triage

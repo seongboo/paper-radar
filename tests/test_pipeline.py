@@ -39,6 +39,29 @@ def test_failed_analysis_skips_paper_only(tmp_path, profile):
     assert [p.arxiv_id for p, _ in pairs] == ["2"]
 
 
+def test_digest_sends_email_when_configured(tmp_path, profile, monkeypatch):
+    from paper_radar import mailer
+    from paper_radar.models import EmailConfig
+
+    profile.digest.output_dir = str(tmp_path / "digests")
+    profile.digest.email = EmailConfig(to=["a@example.com"], smtp_host="h")
+    sent = []
+    monkeypatch.setattr(mailer, "send_digest", lambda cfg, date, body: sent.append((date, body)))
+
+    store = Store(tmp_path / "t.db")
+    llm = FakeLLM(scores={"1": 5})
+    path = pipeline.make_digest(store, profile, llm, "2026-08-21", [make_paper("1")])
+    assert sent and sent[0][0] == "2026-08-21"
+    assert "논문 레이더" in sent[0][1]
+
+    # 발송 실패는 실행을 깨지 않는다 (파일은 이미 생성됨)
+    monkeypatch.setattr(
+        mailer, "send_digest", lambda *a: (_ for _ in ()).throw(OSError("smtp down"))
+    )
+    path = pipeline.make_digest(store, profile, llm, "2026-08-21", [make_paper("1")])
+    assert path.exists()
+
+
 def test_end_to_end_digest(tmp_path, profile):
     profile.digest.output_dir = str(tmp_path / "digests")
     store = Store(tmp_path / "t.db")

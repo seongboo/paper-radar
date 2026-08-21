@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this project is
 
-**paper-radar (논문 레이더)** is a research-survey automation tool: it polls arXiv for new papers in the user's categories, produces a 3-line LLM summary and a relevance score per paper against the user's interest profile, and renders a ranked daily Markdown digest. The MVP pipeline (milestones M0–M3 in `DESIGN.md`) is implemented and tested; M4 extensions (scheduling, Obsidian save, email, journal sources) are open.
+**paper-radar (논문 레이더)** is a research-survey automation tool: it polls arXiv for new papers in the user's categories, produces a 3-line LLM summary and a relevance score per paper against the user's interest profile, and renders a ranked daily Markdown digest. The MVP pipeline (milestones M0–M3 in `DESIGN.md`) plus the M4 delivery extensions (Obsidian copy, SMTP email, cron guide) are implemented and tested; remaining M4 items (Batches API migration, journal sources) are open.
 
 User-facing docs (`README.md`, `DESIGN.md`) and CLI/log messages are in **Korean** — keep new user-facing text consistent with that. `DESIGN.md` is the design plan the code follows; update it when architecture-level decisions change.
 
@@ -31,6 +31,7 @@ Linear pipeline; one module per stage, wired in `src/paper_radar/pipeline.py` wi
 | Analyze | `llm.py` | **One LLM call per paper** returns `{summary(3 lines), score 0–10, reason}` via JSON-schema structured output — never split into separate summarize/score calls |
 | Rank | `rank.py` | `final_score = llm_score + deterministic boosts` (author match +3, keyword weights capped at +4) |
 | Digest | `digest.py` | Markdown to `digests/YYYY-MM-DD.md`, top-N detailed + rest as one-liners; optional Obsidian copy |
+| Deliver | `mailer.py` | Optional SMTP email of the digest (config `digest.email`); password comes **only** from the `SMTP_PASSWORD` env var, never the profile. A send failure logs an error but never fails the run |
 | State | `store.py` | Single SQLite file (`radar.db`): `papers` (dedupe by arxiv_id, `seen_date` groups a day's digest), `analyses` (cache), `runs` |
 
 Models (pydantic) live in `models.py`; `profile.yaml` (schema in `models.Profile`, example in `profile.example.yaml`) is loaded by `config.py`.

@@ -49,3 +49,8 @@ digest:
   min_score: 4             # 미만은 하단 한 줄 목록으로
   output_dir: digests
   # obsidian_path: /path/to/vault/논문 레이더   # 설정하면 다이제스트를 여기에도 복사
+  # email:                 # 설정하면 다이제스트를 메일로도 발송
+  #   to: [you@example.com]
+  #   smtp_host: smtp.gmail.com   # Gmail 은 앱 비밀번호 필요 (SMTP_PASSWORD 환경변수)
+  #   smtp_port: 587
+  #   smtp_user: you@gmail.com

@@ -136,15 +136,17 @@ paper-radar/
 | **M1** 수집 | arXiv 폴링 + SQLite dedupe | `collect` 첫 실행 시 신규 N건 저장, 즉시 재실행 시 0건 |
 | **M2** 분석 | LLM 1콜 요약+점수, structured output, 캐시 | 논문 1건 → 3줄 요약+점수, 재실행 시 API 호출 0회 |
 | **M3** 다이제스트 | Markdown 렌더 + E2E | `run` 1회로 `digests/날짜.md` 완성 — **README 다음 단계 2번 = MVP 달성** |
-| **M4** 확장 | 스케줄링(cron/GitHub Actions), Obsidian 저장, 메일, Batches 전환, 저널 RSS | 선택적 |
+| **M4** 확장 | ~~Obsidian 저장~~, ~~메일~~, ~~cron 가이드~~ 완료(2026-08) · 남음: Batches 전환, 저널 RSS | 선택적 |
 
 M0~M3는 각각 반나절~하루 규모. M3까지가 README의 MVP 정의와 일치한다.
 
-## 8. 결정 필요 (열린 질문)
+## 8. 결정 사항 (2026-08 확정)
 
-| 질문 | 선택지 | 권장 |
-|---|---|---|
-| LLM 1순위 | Claude API vs Ollama | Claude API 먼저 (품질 기준선), Ollama는 추상화로 병행 지원 |
-| 실행 위치 | 로컬 cron vs GitHub Actions | 로컬 cron 10:30 KST (Ollama 옵션과 일관). Actions는 digests/ 자동 커밋이 장점 |
-| `digests/` 커밋 여부 | 커밋 vs gitignore | Obsidian 저장을 쓸 거면 gitignore, 아니면 커밋해서 이력 보존 |
-| 카테고리·키워드 실제 값 | — | `profile.example.yaml`을 본인 관심사로 채우는 것이 첫 작업 |
+| 질문 | 결정 |
+|---|---|
+| LLM 1순위 | Claude API 기본, Ollama 병행 지원 (`llm.provider`) — 구현됨 |
+| 실행 위치 | 로컬 cron 10:30 KST (README 사용법에 crontab 예시). GitHub Actions는 radar.db 상태 보존 문제(캐시/커밋)를 풀어야 해서 보류 |
+| `digests/` 커밋 여부 | gitignore — 전달은 Obsidian 복사·메일로 |
+| 카테고리·키워드 실제 값 | 위상 초전도체·마요라나 프로파일로 확정 (`profile.example.yaml`) |
+
+남은 확장(선택): Batches 전환(지연 무관 배치라 비용 50% 절감 — run 을 제출/수거 2단계로 나누는 복잡도와 교환), 저널 RSS 소스 추가.

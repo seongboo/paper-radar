@@ -9,6 +9,7 @@ import logging
 from collections.abc import Iterable
 from pathlib import Path
 
+from . import mailer
 from .digest import write_digest
 from .llm import AnalysisError, LLMClient
 from .models import Analysis, Paper, Profile
@@ -52,4 +53,14 @@ def make_digest(
     ranked = rank(pairs, profile)
     path = write_digest(date, ranked, profile)
     log.info("다이제스트 생성: %s (%d편)", path, len(ranked))
+
+    if profile.digest.email:
+        try:
+            mailer.send_digest(
+                profile.digest.email, date, path.read_text(encoding="utf-8")
+            )
+            log.info("메일 발송: %s", ", ".join(profile.digest.email.to))
+        except Exception as e:  # 파일은 이미 생성됐으므로 발송 실패로 실행을 깨지 않는다
+            log.error("메일 발송 실패 (다이제스트 파일은 생성됨): %s", e)
+
     return path

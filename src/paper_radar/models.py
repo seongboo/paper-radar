@@ -23,11 +23,22 @@ class LLMConfig(BaseModel):
     ollama_url: str = "http://localhost:11434"
 
 
+class EmailConfig(BaseModel):
+    to: list[str] = Field(min_length=1)
+    smtp_host: str
+    smtp_port: int = 587
+    smtp_user: str | None = None  # 로그인 계정 — 비밀번호는 SMTP_PASSWORD 환경변수로만
+    sender: str | None = None  # 미설정 시 smtp_user
+    starttls: bool = True
+    ssl: bool = False  # 465 포트(SMTPS)면 true
+
+
 class DigestConfig(BaseModel):
     top_n: int = 10
     min_score: int = 4
     output_dir: str = "digests"
     obsidian_path: str | None = None
+    email: EmailConfig | None = None
 
 
 class Profile(BaseModel):
