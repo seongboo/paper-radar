@@ -2,23 +2,39 @@
 #   cp profile.example.yaml profile.yaml
 # profile.yaml 은 개인 설정이므로 gitignore 되어 있습니다.
 
-categories:                # arXiv 카테고리 (필수)
-  - cond-mat.str-el
-  - cond-mat.supr-con
+categories:                # arXiv 카테고리 (필수) — 수집은 카테고리로만 필터됨
+  - cond-mat.supr-con      # 초전도 일반
+  - cond-mat.mes-hall      # 마요라나 소자·나노와이어·위상 물질 논문 대부분이 여기
+  - cond-mat.str-el        # 강상관계 위상 초전도 후보 (UTe2 등)
+  # - quant-ph             # 위상 양자계산 쪽까지 넓히려면 주석 해제 (하루 수집량·비용 큰 폭 증가)
 
-keywords:                  # 제목/초록에 등장하면 랭킹 가산점 (합산 상한 +4)
-  - term: superconductivity
+keywords:                  # 제목/초록 부분 문자열 매치 시 랭킹 가산점 (합산 상한 +4)
+  - term: "majorana"
+    weight: 4
+  - term: "topological superconduct"   # superconductor/superconductivity 둘 다 매치
+    weight: 4
+  - term: "kitaev"
     weight: 2
-  - term: kagome
-    weight: 3
+  - term: "non-abelian"
+    weight: 2
+  - term: "braiding"
+    weight: 2
+  - term: "p-wave"
+    weight: 1
 
 authors: []                # 이 저자가 포함되면 +3 (예: - "J. Doe")
 
 # LLM 관련도 판단에 그대로 전달되는 자유 서술 — 랭킹 품질을 좌우하는 핵심 설정
 interest: >
-  강상관 전자계와 비관례적 초전도의 페어링 메커니즘,
-  플랫밴드/카고메 격자 물질에 관심.
-  순수 ML 방법론 논문은 관심 낮음.
+  핵심 관심사는 위상 초전도체(topological superconductor)와
+  마요라나 페르미온/마요라나 영모드(Majorana zero mode).
+  구체적으로: 마요라나 준입자의 실현과 검출(반도체 나노와이어-초전도체
+  하이브리드, 위상 절연체·철계 초전도체 표면, 카이랄 p-파 페어링),
+  Kitaev 사슬 등 위상 초전도 모형, 자명한 안드레예프 속박상태와
+  마요라나 모드를 구분하는 실험·이론, 비가환(non-Abelian) 통계·브레이딩과
+  위상 양자계산 응용.
+  주변 주제(위상 물질 일반, 초전도 근접효과, 비관례적 초전도)는 중간 관심.
+  핵심 주제와 무관한 순수 ML 방법론 논문은 관심 낮음.
 
 llm:
   provider: claude         # claude | ollama
