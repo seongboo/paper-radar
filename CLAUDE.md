@@ -2,50 +2,51 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Current status: planning only — no code exists yet
-
-As of the latest commit, this repository contains **only documentation** (`README.md`, `DESIGN.md`, this file). There is no source code, no build system, no tests, no dependency manifest, and no CI. The project is at the design stage (설계 단계).
-
-Practical consequences for working here:
-- **Do not assume any code, module layout, or tooling exists.** There are no build/lint/test commands to run because there is nothing to build yet. Don't invent references to files that aren't present.
-- The first substantive coding task will be **greenfield**: establish the project skeleton (language runtime, dependency manifest, entrypoint) before or alongside the first feature. **`DESIGN.md` specifies the intended skeleton, module layout, config schema, and milestones (M0–M4) — follow it** unless the user redirects.
-- `README.md` states the intent; `DESIGN.md` holds the concrete design plan. Both are written in **Korean**; keep new user-facing docs consistent with the existing language and terminology unless asked otherwise.
-
 ## What this project is
 
-**paper-radar (논문 레이더 / "Paper Radar")** is a research-survey automation tool. The goal is to cut the time spent surveying new literature by automatically collecting, summarizing, and ranking new papers against the user's research interests, then delivering a daily digest.
+**paper-radar (논문 레이더)** is a research-survey automation tool: it polls arXiv for new papers in the user's categories, produces a 3-line LLM summary and a relevance score per paper against the user's interest profile, and renders a ranked daily Markdown digest. The MVP pipeline (milestones M0–M3 in `DESIGN.md`) is implemented and tested; M4 extensions (scheduling, Obsidian save, email, journal sources) are open.
 
-## Intended architecture (the pipeline)
+User-facing docs (`README.md`, `DESIGN.md`) and CLI/log messages are in **Korean** — keep new user-facing text consistent with that. `DESIGN.md` is the design plan the code follows; update it when architecture-level decisions change.
 
-The README describes the system as a linear pipeline. When implementing, treat these as the natural stage boundaries:
+## Commands
 
-1. **Collect** — Poll the arXiv API (by category — e.g. `cond-mat` — plus keyword and author filters) to gather newly published items. Journal sources are a later addition.
-2. **Summarize** — Run each collected paper through an LLM to produce a short (~3-line) summary.
-3. **Rank** — Score and sort papers by relevance to the user's interest profile (keywords/categories the user cares about).
-4. **Deliver** — Emit a daily digest as Markdown and/or email. A planned extension is auto-saving results into the user's Obsidian vault.
+```bash
+uv sync                      # install deps (Python 3.11+, uv-managed)
+uv run pytest                # run all tests (fast, no network/API key needed)
+uv run pytest tests/test_rank.py -k keyword_boost   # single file / single test
+uv run paper-radar --help    # CLI: run | collect | digest [--date YYYY-MM-DD]
+```
 
-The **interest profile** (keywords + categories used for both collection filtering and relevance scoring) is a central piece of configuration; defining it is listed as the first concrete next step.
+There is no linter/formatter configured yet.
 
-## Intended tech stack (per README — not yet committed)
+**Sandbox caveat:** in the Claude Code remote environment, `export.arxiv.org` is blocked by the proxy and no `ANTHROPIC_API_KEY` is set, so `run`/`collect` cannot be exercised live here. Verify behavior through the test suite (stubs cover both), and leave live-run verification to the user's machine.
 
-- **Python** as the implementation language.
-- **arXiv API** for paper collection.
-- **LLM** for summarization/ranking — the README names **Claude** and **Ollama** (local) as the candidate providers, implying the LLM layer should be pluggable across a hosted API and a local model.
+## Architecture
 
-Nothing above is pinned in code yet, so these are design intentions to honor, not existing constraints. Confirm specifics with the user before locking in dependencies or a provider.
+Linear pipeline; one module per stage, wired in `src/paper_radar/pipeline.py` with dependency injection (store, fetch iterator, LLM client are passed in — this is what makes the tests network-free):
 
-## MVP scope and next steps (from README)
+| Stage | Module | Notes |
+|---|---|---|
+| Collect | `collect.py` | `arxiv` package (handles 3s rate limit/paging); recent-window query + dedupe against SQLite makes skipped days self-healing |
+| Analyze | `llm.py` | **One LLM call per paper** returns `{summary(3 lines), score 0–10, reason}` via JSON-schema structured output — never split into separate summarize/score calls |
+| Rank | `rank.py` | `final_score = llm_score + deterministic boosts` (author match +3, keyword weights capped at +4) |
+| Digest | `digest.py` | Markdown to `digests/YYYY-MM-DD.md`, top-N detailed + rest as one-liners; optional Obsidian copy |
+| State | `store.py` | Single SQLite file (`radar.db`): `papers` (dedupe by arxiv_id, `seen_date` groups a day's digest), `analyses` (cache), `runs` |
 
-MVP, then expansion:
-- arXiv polling (category/keyword/author) → collect new items
-- LLM 3-line summary + relevance scoring/sorting against the interest profile
-- Daily Markdown/email digest; (expansion) automatic Obsidian save
+Models (pydantic) live in `models.py`; `profile.yaml` (schema in `models.Profile`, example in `profile.example.yaml`) is loaded by `config.py`.
 
-Open next steps still to be done:
-- [ ] Define the interest keyword/category profile
-- [ ] Produce one full day's digest end to end (collect → summarize → rank)
+### Invariants to preserve
 
-## Notes
+- **Analysis cache key** is `(arxiv_id, profile.analysis_hash())`. The hash covers only fields that change LLM output (`interest`, `llm.model`, `llm.language`) — keywords/authors are deliberately excluded so editing boosts never invalidates the cache. If you add a field that alters the prompt, add it to `analysis_hash()`.
+- `llm.ANALYSIS_SCHEMA` (JSON schema sent to providers) and `models.Analysis` (pydantic validation) must stay in sync.
+- A failed analysis (`AnalysisError`) skips that paper only; the pipeline never aborts a whole digest for one paper.
+- LLM providers are pluggable behind `llm.LLMClient` (protocol): `ClaudeClient` (default) and `OllamaClient`. Both must return the same `Analysis` via schema-forced JSON. Don't leak provider specifics outside `llm.py`.
+- Tests never hit the network: arXiv is stubbed via `SimpleNamespace` results (`paper_from_result` is the seam), the LLM via `tests/conftest.py::FakeLLM`.
 
-- Project planning is tracked outside this repo in Obsidian (`0. Inbox/논문 레이더 (paper-radar).md`); the README is the mirror kept in git.
-- Related sibling projects referenced in the README: `seongboo2`, `AARLA`, `inbox-triage`. They are not dependencies of this repo.
+## Claude API specifics
+
+The `anthropic` dependency is **1.x** (breaking changes vs 0.x). Current-shape calls used here: `output_config={"format": {"type": "json_schema", ...}, "effort": ...}` on `messages.create`, and server-side refusal fallback via `client.beta.messages.create(betas=["server-side-fallback-2026-07-01"], fallbacks="default", ...)` (config-gated by `llm.fallback`). Don't regress to 0.x patterns (`output_format={...}` dict, `temperature`, prefill). Default model is `claude-opus-5`; cost knobs are `llm.effort` and switching provider/model in the profile — that's the user's call, not code's.
+
+## Gitignored local files
+
+`profile.yaml` (personal settings — commit changes to `profile.example.yaml` instead), `radar.db`, `digests/`. If asked to change digest output or profile schema, update the example file and tests together.

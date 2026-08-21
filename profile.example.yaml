@@ -1,0 +1,35 @@
+# 관심 프로파일 — 이 파일을 profile.yaml 로 복사한 뒤 본인 관심사로 채우세요.
+#   cp profile.example.yaml profile.yaml
+# profile.yaml 은 개인 설정이므로 gitignore 되어 있습니다.
+
+categories:                # arXiv 카테고리 (필수)
+  - cond-mat.str-el
+  - cond-mat.supr-con
+
+keywords:                  # 제목/초록에 등장하면 랭킹 가산점 (합산 상한 +4)
+  - term: superconductivity
+    weight: 2
+  - term: kagome
+    weight: 3
+
+authors: []                # 이 저자가 포함되면 +3 (예: - "J. Doe")
+
+# LLM 관련도 판단에 그대로 전달되는 자유 서술 — 랭킹 품질을 좌우하는 핵심 설정
+interest: >
+  강상관 전자계와 비관례적 초전도의 페어링 메커니즘,
+  플랫밴드/카고메 격자 물질에 관심.
+  순수 ML 방법론 논문은 관심 낮음.
+
+llm:
+  provider: claude         # claude | ollama
+  model: claude-opus-5     # ollama 라면 예: qwen3:14b
+  language: ko             # 요약 언어
+  effort: low              # claude 전용: low | medium | high (높일수록 판단이 정교하고 비쌈)
+  fallback: true           # claude 전용: 안전 거부 시 서버측 폴백 모델로 자동 재시도
+  # ollama_url: http://localhost:11434
+
+digest:
+  top_n: 10                # 상세 표시 개수
+  min_score: 4             # 미만은 하단 한 줄 목록으로
+  output_dir: digests
+  # obsidian_path: /path/to/vault/논문 레이더   # 설정하면 다이제스트를 여기에도 복사
