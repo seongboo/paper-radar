@@ -11,3 +11,6 @@ radar.db
 
 # 생성물 (Obsidian 저장을 쓰면 여기 둘 필요 없음 — 커밋하려면 이 줄을 지울 것)
 digests/
+
+# 개인 메모 (공개하지 않음)
+NOTES.local.md
