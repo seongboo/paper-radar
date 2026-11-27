@@ -55,8 +55,9 @@ flowchart LR
 ### 3.4 다이제스트 (digest)
 - `digests/YYYY-MM-DD.md` 생성:
   - 헤더: 날짜, 수집 N편 / 상세 표시 M편
-  - 논문별: 제목(링크), 저자, 점수와 근거, 3줄 요약
-  - 하단: 나머지 논문 한 줄 목록 (제목 + 점수)
+  - 논문별: 제목(링크), 저자, 열기 링크(논문 리더 · PDF), 점수와 근거, 3줄 요약
+  - 하단: 나머지 논문 한 줄 목록 (제목 + 점수 + 열기 링크)
+  - 열기 링크: `digest.reader_url`(기본: 이 저장소 `gh-pages`의 논문 리더)에 `?arxiv=<번호>`를 붙여 바로 연다. `null`이면 PDF 링크만.
 - 확장: 같은 렌더 결과를 Obsidian vault 경로에 복사 저장, 메일(SMTP) 발송.
 
 ## 4. 관심 프로파일 (`profile.yaml`) — README 다음 단계 1번
@@ -83,6 +84,7 @@ digest:
   min_score: 4
   output_dir: digests/
   obsidian_path: null    # 확장: 설정 시 Obsidian에도 저장
+  reader_url: https://seongboo.github.io/paper-radar/   # "리더로 열기" 링크 대상. null 이면 PDF 링크만
 ```
 
 - 실제 `profile.yaml`은 개인 설정이므로 `profile.example.yaml`만 커밋하고 본 파일은 gitignore(선택).

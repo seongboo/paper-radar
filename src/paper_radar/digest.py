@@ -4,11 +4,25 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
+from urllib.parse import quote
 
 from .models import Profile, RankedPaper
 
 # arXiv 신규 발표는 일~목 20:00 ET → 한국시간 화~토 오전. 일·월 아침엔 신규 없음.
 _NO_PAPERS = "신규 논문이 없습니다. (arXiv 발표 일정: 한국시간 화~토 오전 9~10시)"
+
+
+_ARXIV_PDF = "https://arxiv.org/pdf/"
+
+
+def _open_links(arxiv_id: str, reader_url: str | None) -> str:
+    """논문을 바로 여는 링크: 논문 리더(설정된 경우) + arXiv PDF."""
+    pdf = f"[PDF]({_ARXIV_PDF}{arxiv_id})"
+    if not reader_url:
+        return pdf
+    sep = "&" if "?" in reader_url else "?"
+    reader = f"{reader_url}{sep}arxiv={quote(arxiv_id, safe='')}"
+    return f"[리더로 열기]({reader}) · {pdf}"
 
 
 def _authors_line(authors: list[str], limit: int = 3) -> str:
@@ -40,6 +54,7 @@ def render(date: str, ranked: list[RankedPaper], profile: Profile) -> str:
             f"## {i}. [{p.title}]({p.link}) — {r.final_score}점{boost_note}",
             f"- 저자: {_authors_line(p.authors)} · {', '.join(p.categories[:3])}"
             f" · {p.updated.date().isoformat()}",
+            f"- 열기: {_open_links(p.arxiv_id, cfg.reader_url)}",
             f"- 근거: {a.reason}",
             "- 요약:",
             *[f"  - {line}" for line in a.summary],
@@ -49,7 +64,9 @@ def render(date: str, ranked: list[RankedPaper], profile: Profile) -> str:
     if rest:
         lines += ["## 그 외", ""]
         lines += [
-            f"- [{r.paper.title}]({r.paper.link}) — {r.final_score}점" for r in rest
+            f"- [{r.paper.title}]({r.paper.link}) — {r.final_score}점"
+            f" · {_open_links(r.paper.arxiv_id, cfg.reader_url)}"
+            for r in rest
         ]
         lines += [""]
 

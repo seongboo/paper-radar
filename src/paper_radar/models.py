@@ -39,6 +39,8 @@ class DigestConfig(BaseModel):
     output_dir: str = "digests"
     obsidian_path: str | None = None
     email: EmailConfig | None = None
+    # 논문 리더(웹) 주소 — 다이제스트의 "리더로 열기" 링크에 쓰인다. null 이면 PDF 링크만 넣는다.
+    reader_url: str | None = "https://seongboo.github.io/paper-radar/"
 
 
 class Profile(BaseModel):

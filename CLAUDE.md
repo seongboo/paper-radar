@@ -51,3 +51,7 @@ The `anthropic` dependency is **1.x** (breaking changes vs 0.x). Current-shape c
 ## Gitignored local files
 
 `profile.yaml` (personal settings — commit changes to `profile.example.yaml` instead), `radar.db`, `digests/`. If asked to change digest output or profile schema, update the example file and tests together.
+
+## Related: paper reader on `gh-pages`
+
+The `gh-pages` branch holds a separate static web app (논문 리더, served at https://seongboo.github.io/paper-radar/), not part of the Python package. It opens an arXiv paper from `?arxiv=<id>`; the digest's "리더로 열기" links (`digest.reader_url`, rendered in `digest._open_links`) depend on that query parameter, so keep the two in sync. `main` and `gh-pages` share no files — never merge one into the other.

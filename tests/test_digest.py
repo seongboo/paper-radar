@@ -48,3 +48,28 @@ def test_write_digest_and_obsidian_copy(tmp_path, profile):
     path = write_digest("2026-08-21", [_ranked("1", 9)], profile)
     assert path.read_text(encoding="utf-8").startswith("# 논문 레이더")
     assert (tmp_path / "vault" / "2026-08-21.md").exists()
+
+
+def test_render_adds_reader_and_pdf_links(profile):
+    profile.digest.reader_url = "https://example.org/reader/"
+    md = render("2026-08-21", [_ranked("2408.12345v1", 9), _ranked("cond-mat/0407123", 2)], profile)
+    # 상세 항목: 리더 링크(arXiv 번호를 쿼리로) + PDF 링크
+    assert (
+        "- 열기: [리더로 열기](https://example.org/reader/?arxiv=2408.12345v1)"
+        " · [PDF](https://arxiv.org/pdf/2408.12345v1)"
+    ) in md
+    # 그 외 한 줄 항목에도 붙고, 옛 형식 번호의 '/' 는 쿼리에서 인코딩된다
+    assert "?arxiv=cond-mat%2F0407123) · [PDF](https://arxiv.org/pdf/cond-mat/0407123)" in md
+
+
+def test_render_pdf_link_only_when_reader_disabled(profile):
+    profile.digest.reader_url = None
+    md = render("2026-08-21", [_ranked("2408.12345v1", 9)], profile)
+    assert "- 열기: [PDF](https://arxiv.org/pdf/2408.12345v1)" in md
+    assert "리더로 열기" not in md
+
+
+def test_reader_url_with_existing_query(profile):
+    profile.digest.reader_url = "https://example.org/reader/?lang=ko"
+    md = render("2026-08-21", [_ranked("2408.12345v1", 9)], profile)
+    assert "(https://example.org/reader/?lang=ko&arxiv=2408.12345v1)" in md

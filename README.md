@@ -27,6 +27,8 @@ uv run paper-radar run                 # 수집→분석→다이제스트 (dige
 
 **메일 발송:** profile의 `digest.email` 블록을 설정하고 `SMTP_PASSWORD` 환경변수를 주면 다이제스트가 메일로도 온다 (Gmail은 앱 비밀번호 사용). Obsidian 저장은 `digest.obsidian_path` 설정.
 
+**논문 바로 열기:** 다이제스트의 각 논문에 "리더로 열기"와 "PDF" 링크가 붙는다. "리더로 열기"는 논문 리더(API 키 버전)에서 그 논문을 바로 연다. 대상 주소는 `digest.reader_url`로 바꾸거나 `null`로 끌 수 있다. Claude 버전 논문 리더를 쓰는 경우에는 "PDF"로 내려받아 끌어다 놓는다.
+
 ## 핵심 기능 (MVP → 확장)
 - arXiv API 폴링(카테고리/키워드/저자) → 신규 항목 수집
 - LLM 3줄 요약 + 관심 프로파일 대비 관련도 점수·정렬
@@ -48,6 +50,7 @@ uv run paper-radar run                 # 수집→분석→다이제스트 (dige
 찾은 논문을 **읽는** 도구입니다. 설치 없이 브라우저에서 엽니다.
 
 - 주소: https://seongboo.github.io/paper-radar/
+- arXiv 논문 바로 열기: 위쪽 칸에 arXiv 번호를 넣거나, 주소 뒤에 `?arxiv=2408.12345`를 붙인다 (논문 레이더 다이제스트의 "리더로 열기"가 이 방식)
 - 파일 위치: 이 저장소의 `gh-pages` 브랜치
 
 **기능**
