@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+dist/
+.pytest_cache/
+
+# 개인 설정·로컬 상태 (예시는 profile.example.yaml 로 커밋)
+profile.yaml
+radar.db
+
+# 생성물 (Obsidian 저장을 쓰면 여기 둘 필요 없음 — 커밋하려면 이 줄을 지울 것)
+digests/

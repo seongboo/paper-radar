@@ -1,0 +1,56 @@
+# 관심 프로파일 — 이 파일을 profile.yaml 로 복사한 뒤 본인 관심사로 채우세요.
+#   cp profile.example.yaml profile.yaml
+# profile.yaml 은 개인 설정이므로 gitignore 되어 있습니다.
+
+categories:                # arXiv 카테고리 (필수) — 수집은 카테고리로만 필터됨
+  - cond-mat.supr-con      # 초전도 일반
+  - cond-mat.mes-hall      # 마요라나 소자·나노와이어·위상 물질 논문 대부분이 여기
+  - cond-mat.str-el        # 강상관계 위상 초전도 후보 (UTe2 등)
+  # - quant-ph             # 위상 양자계산 쪽까지 넓히려면 주석 해제 (하루 수집량·비용 큰 폭 증가)
+
+keywords:                  # 제목/초록 부분 문자열 매치 시 랭킹 가산점 (합산 상한 +4)
+  - term: "majorana"
+    weight: 4
+  - term: "topological superconduct"   # superconductor/superconductivity 둘 다 매치
+    weight: 4
+  - term: "kitaev"
+    weight: 2
+  - term: "non-abelian"
+    weight: 2
+  - term: "braiding"
+    weight: 2
+  - term: "p-wave"
+    weight: 1
+
+authors: []                # 이 저자가 포함되면 +3 (예: - "J. Doe")
+
+# LLM 관련도 판단에 그대로 전달되는 자유 서술 — 랭킹 품질을 좌우하는 핵심 설정
+interest: >
+  핵심 관심사는 위상 초전도체(topological superconductor)와
+  마요라나 페르미온/마요라나 영모드(Majorana zero mode).
+  구체적으로: 마요라나 준입자의 실현과 검출(반도체 나노와이어-초전도체
+  하이브리드, 위상 절연체·철계 초전도체 표면, 카이랄 p-파 페어링),
+  Kitaev 사슬 등 위상 초전도 모형, 자명한 안드레예프 속박상태와
+  마요라나 모드를 구분하는 실험·이론, 비가환(non-Abelian) 통계·브레이딩과
+  위상 양자계산 응용.
+  주변 주제(위상 물질 일반, 초전도 근접효과, 비관례적 초전도)는 중간 관심.
+  핵심 주제와 무관한 순수 ML 방법론 논문은 관심 낮음.
+
+llm:
+  provider: claude         # claude | ollama
+  model: claude-opus-5     # ollama 라면 예: qwen3:14b
+  language: ko             # 요약 언어
+  effort: low              # claude 전용: low | medium | high (높일수록 판단이 정교하고 비쌈)
+  fallback: true           # claude 전용: 안전 거부 시 서버측 폴백 모델로 자동 재시도
+  # ollama_url: http://localhost:11434
+
+digest:
+  top_n: 10                # 상세 표시 개수
+  min_score: 4             # 미만은 하단 한 줄 목록으로
+  output_dir: digests
+  # obsidian_path: /path/to/vault/논문 레이더   # 설정하면 다이제스트를 여기에도 복사
+  # email:                 # 설정하면 다이제스트를 메일로도 발송
+  #   to: [you@example.com]
+  #   smtp_host: smtp.gmail.com   # Gmail 은 앱 비밀번호 필요 (SMTP_PASSWORD 환경변수)
+  #   smtp_port: 587
+  #   smtp_user: you@gmail.com
