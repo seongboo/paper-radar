@@ -69,7 +69,9 @@ uv run paper-radar collect
 uv run paper-radar run && head -60 digests/$(date +%F).md
 ```
 
-편수가 너무 많으면 `categories`를 줄이거나 더 작은 모델(`gemma3:4b` 등)로 바꾼다. 요약 품질은 모델에 따라 달라진다.
+실측 예(2026-11-27): Apple Silicon 맥북 프로, `gemma3:12b`, `cond-mat.mtrl-sci` 48편 → 약 8분 (편당 약 10초). 요약은 한국어로 정상 생성됐다.
+
+편수가 너무 많으면 `categories`를 줄이거나 더 작은 모델(`gemma3:4b` 등)로 바꾼다. 요약 품질은 모델에 따라 달라진다. 위 실행에서는 로컬 모델의 관련도 점수가 전반적으로 후하게(5~8점대에 몰려) 나와, 순위가 키워드 부스트에 크게 좌우됐다. 점수 변별이 약하면 `keywords`의 가중치와 `digest.min_score`를 조정한다.
 
 ## 핵심 기능 (MVP → 확장)
 - arXiv API 폴링(카테고리/키워드/저자) → 신규 항목 수집
