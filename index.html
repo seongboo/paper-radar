@@ -55,6 +55,7 @@ button{cursor:pointer}
 .btn.small{padding:3px 8px;font-size:12.5px}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:12.5px}
+#axInput{width:118px;border:1px solid var(--line);background:var(--raised);border-radius:6px;padding:5px 8px;font-family:var(--font-mono);font-size:12.5px}
 #pageInput{width:44px;text-align:right;border:1px solid var(--line);background:var(--raised);border-radius:6px;padding:4px 6px}
 .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .seg button{border:0;background:var(--raised);padding:5px 10px}
@@ -206,6 +207,10 @@ dialog::backdrop{background:rgba(10,14,20,.5)}
   <span class="brand">논문 리더</span>
   <button class="btn primary" id="openBtn" type="button">PDF 열기</button>
   <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden>
+  <div class="group">
+    <input id="axInput" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="arXiv 번호" aria-label="arXiv 번호 또는 주소" title="arXiv 번호(예: 2408.12345)나 arXiv 주소를 넣으면 그 논문을 엽니다">
+    <button class="btn" id="axBtn" type="button">arXiv 열기</button>
+  </div>
   <span class="docname" id="docName" title=""></span>
 
   <div class="group" id="navGroup" hidden>
@@ -242,6 +247,7 @@ dialog::backdrop{background:rgba(10,14,20,.5)}
         <p>파일은 이 컴퓨터에서 바로 열립니다. AI에 물을 때만 해당 내용이 설정에서 고른 AI 회사로 전송됩니다. 먼저 오른쪽 위 AI 설정에서 API 키를 넣으세요.</p>
         <button class="btn primary" id="openBtn2" type="button">PDF 열기</button>
         <dl>
+          <dt>arXiv 논문</dt><dd>위쪽 칸에 arXiv 번호(예: 2408.12345)나 주소를 넣고 arXiv 열기를 누르면 내려받지 않고 바로 엽니다.</dd>
           <dt>글자 선택</dt><dd>문장이나 수식을 끌어서 선택하면 설명, 번역, 유도, 참고문헌 버튼이 뜹니다.</dd>
           <dt>옛날 논문</dt><dd>스캔본처럼 글자가 잡히지 않는 PDF는 상단의 글자 인식으로 AI가 쪽 단위로 읽습니다.</dd>
           <dt>영역 캡처</dt><dd>그림, 표, 글자가 깨지는 수식은 상단의 영역 캡처로 잡아서 묻습니다.</dd>
@@ -459,6 +465,33 @@ const vw = $("viewer");
 ["dragenter", "dragover"].forEach((t) => vw.addEventListener(t, (e) => { e.preventDefault(); $("empty").classList.add("drag"); }));
 ["dragleave", "drop"].forEach((t) => vw.addEventListener(t, (e) => { e.preventDefault(); $("empty").classList.remove("drag"); }));
 vw.addEventListener("drop", (e) => { const f = [...(e.dataTransfer?.files || [])].find((x) => /pdf$/i.test(x.type) || /\.pdf$/i.test(x.name)); if (f) openFile(f); else toast("PDF 파일만 열 수 있습니다"); });
+
+/* Open a paper straight from arXiv: by number typed in the bar, or from a link like ?arxiv=2408.12345 (used by the paper-radar digest). */
+function arxivId(raw) {
+  const t = String(raw || "").trim();
+  const m = t.match(/(\d{4}\.\d{4,5}(?:v\d+)?)/) || t.match(/([a-z-]+(?:\.[A-Z]{2})?\/\d{7}(?:v\d+)?)/i);
+  return m ? m[1] : null;
+}
+async function openArxiv(raw) {
+  const id = arxivId(raw);
+  if (!id) { notice("arXiv 번호를 알아보지 못했습니다. 2408.12345 같은 형식이나 arXiv 주소를 넣으세요."); return; }
+  notice(""); const prev = $("docName").textContent; $("docName").textContent = "arXiv " + id + " 받는 중";
+  const bare = id.replace(/v\d+$/, ""), tries = bare === id ? [id] : [id, bare];
+  for (const t of tries) {
+    try {
+      const r = await fetch("https://arxiv.org/pdf/" + t); if (!r.ok) continue;
+      const buf = await r.arrayBuffer();
+      if (new TextDecoder().decode(buf.slice(0, 5)) !== "%PDF-") continue;
+      $("axInput").value = t;
+      await openFile(new File([buf], "arXiv-" + t.replace("/", "_") + ".pdf", { type: "application/pdf" }));
+      return;
+    } catch (_) { /* try the next form of the id */ }
+  }
+  $("docName").textContent = prev;
+  notice("arXiv에서 " + id + " 논문을 받지 못했습니다. 번호가 맞는지 확인하거나, arxiv.org에서 PDF를 내려받아 여기에 끌어다 놓으세요.");
+}
+$("axBtn").onclick = () => openArxiv($("axInput").value);
+$("axInput").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); openArxiv($("axInput").value); } });
 
 async function openFile(file) {
   if (S.busy) stopCall();
@@ -1356,6 +1389,7 @@ $("cfgForm").addEventListener("submit", () => {
   persistCfg(); toast(c.key && c.model ? "AI 설정을 저장했습니다" : "키와 모델을 모두 넣어야 AI 기능을 쓸 수 있습니다");
 });
 cfgLabel(); storeLabel();
+try { const q = new URLSearchParams(location.search).get("arxiv"); if (q && window.pdfjsLib) { $("axInput").value = q; openArxiv(q); } } catch (_) {}
 renderNotes();
 if (!window.pdfjsLib) notice("PDF 엔진을 불러오지 못했습니다. 페이지를 새로 고쳐 주세요.");
 </script>
